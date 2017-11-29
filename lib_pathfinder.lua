@@ -1,9 +1,8 @@
 -- Look at:
-
--- https://www.gamedev.net/forums/topic/669843-the-simple-funnel-algorithm-pre-visited/
--- [great paper on pathfinding using navmeshes](http://paper.ijcsns.org/07_book/201212/20121208.pdf)
--- http://www.koffeebird.com/2014/05/towards-modified-simple-stupid-funnel.html
--- http://digestingduck.blogspot.co.uk/2010/03/simple-stupid-funnel-algorithm.html
+--   * https://www.gamedev.net/forums/topic/669843-the-simple-funnel-algorithm-pre-visited/
+--   * [great paper on pathfinding using navmeshes](http://paper.ijcsns.org/07_book/201212/20121208.pdf)
+--   * http://www.koffeebird.com/2014/05/towards-modified-simple-stupid-funnel.html
+--   * http://digestingduck.blogspot.co.uk/2010/03/simple-stupid-funnel-algorithm.html
 
 require 'lib_astar'
 
@@ -131,6 +130,10 @@ local function funnel(start_point, target_point, polygon_path)
                 right_index = i
             else
                 -- Right over left, insert left to path and restart scan from portal left point.
+
+                -- @TODO: have the point be adjusted slightly along the normal of the vertex. 
+                --        use the size of the agent moving (pass this as a parameter)
+
                 table.insert(point_path, left_vertex)
                 -- Make current left the new apex.
                 apex_vertex = left_vertex
@@ -154,6 +157,10 @@ local function funnel(start_point, target_point, polygon_path)
                 left_index = i
             else
                 -- Left over right, insert right to path and restart scan from portal right point.
+
+                -- @TODO: have the point be adjusted slightly along the normal of the vertex.
+                --        use the size of the agent moving (pass this as a parameter)
+
                 table.insert(point_path, right_vertex)
                 -- Make current right the new apex.
                 apex_vertex = right_vertex
@@ -184,8 +191,9 @@ function pathfinder.map(newMap)
 end
 
 function pathfinder.path(starting_point, target_point)
-    local starting_polygon = nil --
-    local target_polygon = nil -- 
+    local starting_polygon = nil
+    local target_polygon = nil
+
     for _, polygon in pairs(map) do
         if polygon_contains_point(polygon, starting_point) then
             starting_polygon = polygon
@@ -214,6 +222,8 @@ function pathfinder.path(starting_point, target_point)
             error("No path. D:")
         end
     end
+
+    table.insert(point_path, target_point)
 
     return point_path
 end
