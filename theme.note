@@ -1,0 +1,52 @@
+stealth game like shadow tactics
+
+sci-fi cyberpunk
+
+more advanced guards will see things and radio them in. 
+they will then recieve orders as to what to do next. 
+sometimes they will also go check it out.
+sometimes their orders will be to stay put.
+sometimes their orders will be to tell someone else to check it out.
+sometimes reinforcements will be sent.
+
+levels will have global modifiers to certain parameters.
+high general threat level will have the guards be more alert (larger view cones? faster view cone fillup?)
+
+high terror level will have civilians more likely to report you (and possibly also on higher alert?) 
+    this will be known at the outset of a level and not change (unless it is massively signposted and part of the level).
+
+people have two vision cones and a speed at which their vision cone fills up.
+
+
+People AI
+
+normal guard:
+
+    default: walks patrol (or just stands still)
+    distracted: engages with distraction
+    suspicious: checks out suspicion
+    alert: raises alarm, updates last-seen, engages enemy
+
+radio guard:
+
+    default: walks patrol (or just stands still)
+    -- cannot be distracted --
+    suspicious: informs command about suspicions, awaits orders
+    alert: raises alarm, updates last-seen, engages enemy
+
+armoured guard:
+    -- cannot be attacked without heavy weaponry --
+
+    default: walks patrol (or just stands still)
+    -- cannot be distracted --
+    suspicious: checking out suspicion
+    alert: raises alarm, updates last-seen, engages enemy
+
+civilian:
+
+    default: walks patrol (or just stands still)
+    distracted: engages with distraction
+    suspicious: CONTEXT DEPENDENT (high chaos means they're more likely to report you?)
+    alert: report you, run away
+
+
