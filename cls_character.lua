@@ -1,27 +1,29 @@
 local pathfinder = require 'lib_pathfinder'
 
-local person = require 'cls_person'
+local Person = require 'cls_person'
 
-local character = {}
-setmetatable(character, person)
-character.__index = character
+local Character = {}
+setmetatable(Character, Person)
+Character.__index = Character
 
-function character.new(options)
-    local this = person.new(options)
-    setmetatable(this, character)
+function Character.new(options)
+    local this = Person.new(options)
+    setmetatable(this, Character)
+
+    this.is_sneaking = false
 
     return this
 end
 
-function character:speed()
-    -- @TODO: have different speeds (also include stuff like carrying bodies, etc.)
-    -- if self.is_crouching then
-    --     return self.speed_crouching
-    -- else 
-    --     return self.speed_walking
-    -- end
-    return 64
-end 
+function Character:toggle_sneak()
+    -- @TODO: make sure the Character can actually start or stop sneaking (e.g. is hauling a body)
+    self.is_sneaking = not self.is_sneaking
+    if self.is_sneaking then
+        self.movement = "sneaking"
+    else
+        self.movement = "walking"
+    end
+end
 
 local function update_movement(self, dt)
     local next_point = self.path[1]
@@ -41,14 +43,21 @@ local function update_movement(self, dt)
     end
 end
 
-function character:update(dt)
+function Character:update(dt)
     if self.path then
         update_movement(self, dt)
     end
 end
 
-function character:draw()
-    person.draw(self)
+function Character:draw()
+    Person.draw(self)
+
+    if self.is_sneaking then
+        love.graphics.setColor(32, 32, 32, 128)
+    else
+        love.graphics.setColor(255, 255, 255, 128)
+    end
+    love.graphics.circle("line", self.position[1], self.position[2], self.size + 2)
 
     if DEBUG then
         if self.path then
@@ -61,4 +70,4 @@ function character:draw()
     end
 end
 
-return character
+return Character
