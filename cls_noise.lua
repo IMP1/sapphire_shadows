@@ -9,6 +9,7 @@ function Noise.new(options)
     setmetatable(self, Noise)
     self.position = options.position 
     self.max_size = options.radius   or 128
+    self.origin   = options.origin   or nil
     -- self.urgency  = options.urgency  or self.max_size * 8
     self.urgency  = GROW_SPEED
 
@@ -39,7 +40,7 @@ function Noise:update(dt, scene)
         if not self.listeners[obj] then
             self.listeners[obj] = true
             if obj.hear_noise then
-                obj:hear_noise(unpack(self.position))
+                obj:hear_noise(self.position, self.origin)
             end
         end
     end
