@@ -1,4 +1,5 @@
 local pathfinder = require 'lib_pathfinder'
+local geometry   = require 'util_geometry'
 
 local Guard = require 'cls_guard'
 local Actor = require 'cls_character'
@@ -56,7 +57,7 @@ function Scene.new()
             position = {230, 180},
             direction = 0,
             speed = {
-                walking = 64,
+                [Actor.movement.WALKING] = 64,
             },
         }),
     }
@@ -90,6 +91,54 @@ function Scene:objects_around_point(point, radius)
     return objects
 end
 
+local function is_inside_cone(point, centre, sectorStart, sectorEnd, radius)
+    function areClockwise(v1, v2)
+        return v1[2]*v2[1] - v1[1]*v2[2] > 0
+    end
+    function isWithinRadius(point, centre, radius)
+        local dx = point[1] - centre[1]
+        local dy = point[2] - centre[2]
+        return dx^2 + dy^2 <= radius*radius
+    end
+
+    local relative_centre = { point[1] - centre[1], point[2] - centre[2] }
+    
+    
+    local start_vector = {radius * math.cos(sectorStart), radius * math.sin(sectorStart)}
+    local end_vector   = {radius * math.cos(sectorEnd),   radius * math.sin(sectorEnd)}
+
+    -- if isWithinRadius(point, centre, radius) then
+    --     print(unpack(point))
+    --     print(unpack(centre))
+    --     print(radius)
+    --     print(sectorStart, not areClockwise(start_vector, relative_centre))
+    --     print(sectorEnd, areClockwise(end_vector, relative_centre))
+    --     print("\n")
+    -- end
+
+    return (not areClockwise(start_vector, relative_centre)) and 
+            areClockwise(end_vector, relative_centre) and
+            isWithinRadius(point, centre, radius)
+end
+
+
+function Scene:objects_in_cone(centre_point, viewcone, angle)
+    local a1 = angle - viewcone.width / 2
+    local a2 = angle + viewcone.width / 2
+    local radius = viewcone.range
+    
+    local objects = {}
+    for _, obj in pairs(self.party) do
+        local hard_to_see = obj.is_sneaking
+        if (viewcone.focus or not hard_to_see) and 
+           geometry.sector_contains_point(centre_point, a1, a2, radius, obj.position) then
+            table.insert(objects, obj)
+        end
+    end
+
+    return objects
+end
+
 function Scene:keyPressed(key)
     if key == "escape" then
         self.party[self.selected_character].path = nil
@@ -108,6 +157,11 @@ function Scene:keyPressed(key)
     end
     if key == "t" then
         self.action = "teleport"
+    end
+    if key == "r" then
+        for _, g in pairs(self.people) do
+            g.behaviour = g.behaviours.PATROL
+        end
     end
 end
 
@@ -206,10 +260,18 @@ function Scene:draw()
     if self.action then
         love.graphics.setColor(255, 255, 255)
         love.graphics.print(self.action, 255, 0)
+
+        if self.action == "noise" then
+            love.graphics.setColor(128, 128, 255, 64)
+            love.graphics.circle("line", mx, my, 128)
+        end
     end
 
     love.graphics.setColor(255, 255, 255)
     love.graphics.print(mx .. ", " .. my, 0, 0)
+
+    local foo = self.party[1]:is_turned_towards({mx, my})
+    love.graphics.print(tostring(foo), 0, 16)
 end
 
 return Scene
