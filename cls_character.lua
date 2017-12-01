@@ -7,12 +7,12 @@ setmetatable(Character, Person)
 Character.__index = Character
 
 function Character.new(options)
-    local this = Person.new(options)
-    setmetatable(this, Character)
+    local self = Person.new(options)
+    setmetatable(self, Character)
 
-    this.is_sneaking = false
+    self.is_sneaking = false
 
-    return this
+    return self
 end
 
 function Character:toggle_sneak()
@@ -27,19 +27,18 @@ end
 
 local function update_movement(self, dt)
     local next_point = self.path[1]
+    if not self:is_turned_towards(next_point) then
+        self:turn_towards(next_point, self.turn_speed, dt)
+        return
+    end
+
     if self:is_at(next_point[1], next_point[2], 5) then
         table.remove(self.path, 1)
         if #self.path == 0 then
             self.path = nil
         end
     else
-        local x, y = self:get_position()
-        local dx = next_point[1] - x
-        local dy = next_point[2] - y
-        local r = math.atan2(dy, dx)
-        local mx = self:speed() * dt * math.cos(r)
-        local my = self:speed() * dt * math.sin(r)
-        self.position = {x + mx, y + my}
+        self:move_towards(next_point, self:speed(), dt)
     end
 end
 
@@ -62,7 +61,8 @@ function Character:draw()
     if DEBUG then
         if self.path then
             love.graphics.setColor(255, 0, 255)
-            love.graphics.line(self.position[1], self.position[2], self.path[1][1], self.path[1][2])
+            love.graphics.line(self.position[1] + 10 * math.cos(self.direction), self.position[2] + 10 * math.sin(self.direction), 
+                               self.path[1][1], self.path[1][2])
             for i = 1, #self.path - 1 do
                 love.graphics.line(self.path[i][1], self.path[i][2], self.path[i+1][1], self.path[i+1][2])
             end
