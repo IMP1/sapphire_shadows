@@ -85,7 +85,6 @@ local function update_patrol(self, dt, scene)
         local objects = scene:objects_in_cone(self.position, viewcone, self.facing)
         for _, obj in pairs(objects) do
             if getmetatable(obj) == Actor then
-                -- @TODO: make sure object is in cone (rather than distance) and can be seen.
                 self.behaviour = behaviours.SUSPICIOUS
                 self.suspicious_object = obj
                 self.suspicious_position = obj.position
@@ -150,7 +149,6 @@ end
 
 function Guard:draw_vision()
     for _, viewcone in pairs(self.viewcones) do
-        -- @TODO: draw an arc, filled
         if viewcone.focus then
             love.graphics.setColor(32, 255, 32, 128)
         else
