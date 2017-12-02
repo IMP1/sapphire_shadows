@@ -71,4 +71,14 @@ function util.sector_contains_point(centre, start_angle, end_angle, radius, poin
             util.circle_contains_point(centre, radius, point)
 end
 
+function util.mean_angle(...)
+    local angle_list = {...}
+    local sum_sin, sum_cos = 0, 0
+    for i, angle in pairs(angle_list) do
+        sum_sin = sum_sin + math.sin(angle)
+        sum_cos = sum_cos + math.cos(angle)
+    end
+    return math.atan2(sum_sin, sum_cos)
+end
+ 
 return util
