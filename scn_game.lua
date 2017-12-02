@@ -177,7 +177,8 @@ function Scene:mousePressed(mx, my, key)
 
             self.character_action = nil
         else
-            local path = pathfinder.path(self.party[self.selected_character].position, {mx, my})
+            local char = self.party[self.selected_character]
+            local path = pathfinder.path(char.position, {mx, my}, char.size)
             if path then
                 self.party[self.selected_character].path = path
             end
