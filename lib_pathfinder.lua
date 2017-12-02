@@ -91,7 +91,37 @@ local function adjacent_node_function(node, neighbour)
     return shared_line_segment(node, neighbour)
 end
 
-local function funnel(start_point, target_point, polygon_path)
+local function offset_corner_point(corner_point, line_segments, offset)
+    -- @OPTIMISE: this is heavy on the trigonmetry functions
+    local other_ends = {}
+    for _, line in pairs(line_segments) do
+        if line[1] == corner_point[1] and line[2] == corner_point[2] then
+            table.insert(other_ends, {line[3], line[4]})
+        elseif line[3] == corner_point[1] and line[4] == corner_point[2] then
+            table.insert(other_ends, {line[1], line[2]})
+        end
+    end
+
+    local sum_offset_sin = 0
+    local sum_offset_cos = 0
+    for _, other_end in pairs(other_ends) do
+        local dx = other_end[1] - corner_point[1]
+        local dy = other_end[2] - corner_point[2]
+        local angle = math.atan2(dy, dx)
+        sum_offset_sin = sum_offset_sin + math.sin(angle)
+        sum_offset_cos = sum_offset_cos + math.cos(angle) 
+    end
+
+    local offset_angle = math.atan2(sum_offset_sin, sum_offset_cos)
+
+    return {
+        corner_point[1] + offset * math.cos(offset_angle),
+        corner_point[2] + offset * math.sin(offset_angle),
+    }
+end
+
+
+local function funnel(start_point, target_point, polygon_path, agent_size)
     local point_path = {}
 
     -- create line segments (referred to as 'portals' in most articles)
@@ -131,10 +161,16 @@ local function funnel(start_point, target_point, polygon_path)
             else
                 -- Right over left, insert left to path and restart scan from portal left point.
 
-                -- @TODO: have the point be adjusted slightly along the normal of the vertex. 
-                --        use the size of the agent moving (pass this as a parameter)
+                -- Move the point along away from the edge of the vertex.
+                local new_path_point = left_vertex
+                local should_not_offset = (apex_index == 1) and 
+                                          (i == #line_segments) and 
+                                          (left_index == i or right_index == i)
+                if not should_not_offset then
+                    new_path_point = offset_corner_point(new_path_point, line_segments, agent_size * 2)
+                end
+                table.insert(point_path, new_path_point)
 
-                table.insert(point_path, left_vertex)
                 -- Make current left the new apex.
                 apex_vertex = left_vertex
                 apex_index = left_index
@@ -158,10 +194,17 @@ local function funnel(start_point, target_point, polygon_path)
             else
                 -- Left over right, insert right to path and restart scan from portal right point.
 
-                -- @TODO: have the point be adjusted slightly along the normal of the vertex.
-                --        use the size of the agent moving (pass this as a parameter)
+                -- Move the point along away from the edge of the vertex.
+                local new_path_point = right_vertex
+                local should_not_offset = (apex_index == 1) and 
+                                          (i == #line_segments) and 
+                                          (left_index == i or right_index == i)
+                if not should_not_offset then
+                    new_path_point = offset_corner_point(new_path_point, line_segments, agent_size * 2)
+                end
+                table.insert(point_path, new_path_point)
 
-                table.insert(point_path, right_vertex)
+
                 -- Make current right the new apex.
                 apex_vertex = right_vertex
                 apex_index = right_index
@@ -190,7 +233,7 @@ function pathfinder.map(newMap)
     end
 end
 
-function pathfinder.path(starting_point, target_point)
+function pathfinder.path(starting_point, target_point, agent_size)
     local starting_polygon = nil
     local target_polygon = nil
 
@@ -217,7 +260,7 @@ function pathfinder.path(starting_point, target_point)
     if starting_polygon ~= target_polygon then
         local polygon_path = astar.path(starting_polygon, target_polygon, map, false, adjacent_node_function) -- a* with polygons
         if polygon_path then
-            point_path = funnel(starting_point, target_point, polygon_path)
+            point_path = funnel(starting_point, target_point, polygon_path, (agent_size or 0))
         else
             error("No path. D:")
         end
